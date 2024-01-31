@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using MinimalAPIFilms;
 using MinimalAPIFilms.Entidades;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +7,8 @@ var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermiti
 // el "!" sirve para asegurar que siempre habra un avlor y no sera nulo
 
 //inicio area de servicios
+builder.Services.AddDbContext<ApplicationDbContext>(opciones =>
+    opciones.UseSqlServer("name=DefaultConnection"));
 
 builder.Services.AddCors(opciones =>
 {
