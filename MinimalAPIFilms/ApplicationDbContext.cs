@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using MinimalAPIFilms.Entidades;
 
 namespace MinimalAPIFilms
 {
@@ -8,5 +9,7 @@ namespace MinimalAPIFilms
         {
 
         }
+
+        public DbSet<Genero> Generos { get; set; }
     }
 }
