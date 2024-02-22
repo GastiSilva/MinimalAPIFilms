@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIFilms;
 using MinimalAPIFilms.Entidades;
+using MinimalAPIFilms.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 var origenesPermitidos = builder.Configuration.GetValue<string>("origenesPermitidos")!;
@@ -28,6 +29,7 @@ builder.Services.AddOutputCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<IRepositoryGeneros, RepositoryGeneros>();
 //fin area de serrvicios
 var app = builder.Build();
 
@@ -59,6 +61,14 @@ app.MapGet("/generos", () =>
     return generos;
 }).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(15)));
 
+
+//creo endpoint POST para crear genero
+app.MapPost("/genros", async (Genero genero, IRepositoryGeneros Repository) =>
+{
+    var id = await Repository.Crear(genero);
+    return Results.Created($"/generos/{id}", genero);
+
+});
 // fin area middlware
 app.Run();
 
