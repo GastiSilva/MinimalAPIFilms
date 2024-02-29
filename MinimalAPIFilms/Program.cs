@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIFilms;
 using MinimalAPIFilms.Entidades;
@@ -45,30 +46,33 @@ app.UseOutputCache();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/generos", () =>
+app.MapGet("/generos", async (IRepositoryGeneros Repository) =>
 {
-    var generos = new List<Genero>
+    return await Repository.ObtenerTodos();
+}).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(60)).Tag("generos-get"));
+
+// {id:int} indicar paramentro de url
+app.MapGet("/generos/{id:int}", async (IRepositoryGeneros Repository, int id) =>
+{
+    var genero = await Repository.ObtenerPorId(id);
+    if (genero is null)
     {
-        new Genero { Id = 1,
-                     Name = "Drama"},
+        return Results.NotFound();
+    }
 
-         new Genero { Id = 2,
-                     Name = "Accion"},
-
-          new Genero { Id = 3,
-                     Name = "Comedia"},
-    };
-    return generos;
-}).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(15)));
-
-
+    return Results.Ok(genero);
+});
 //creo endpoint POST para crear genero
-app.MapPost("/genros", async (Genero genero, IRepositoryGeneros Repository) =>
+
+app.MapPost("/generos", async (Genero genero, IRepositoryGeneros Repository,
+    IOutputCacheStore outputCacheStore) =>
 {
     var id = await Repository.Crear(genero);
+    await outputCacheStore.EvictByTagAsync("generos-get", default);
     return Results.Created($"/generos/{id}", genero);
 
 });
+
 // fin area middlware
 app.Run();
 

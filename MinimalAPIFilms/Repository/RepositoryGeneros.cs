@@ -1,4 +1,5 @@
-﻿using MinimalAPIFilms.Entidades;
+﻿using Microsoft.EntityFrameworkCore;
+using MinimalAPIFilms.Entidades;
 
 namespace MinimalAPIFilms.Repository
 {
@@ -17,6 +18,17 @@ namespace MinimalAPIFilms.Repository
             context.Add(genero);
             await context.SaveChangesAsync();
             return genero.Id;
+        }
+
+        public async Task<Genero?> ObtenerPorId(int id)
+        {
+            return await context.Generos.FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<List<Genero>> ObtenerTodos()
+        {
+            return await context.Generos.OrderBy(x => x.Name).ToListAsync();
+
         }
     }
 }
