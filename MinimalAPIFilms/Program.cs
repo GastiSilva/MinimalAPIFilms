@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIFilms;
 using MinimalAPIFilms.Entidades;
+using MinimalAPIFilms.Migrations;
 using MinimalAPIFilms.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +73,33 @@ app.MapPost("/generos", async (Genero genero, IRepositoryGeneros Repository,
     return Results.Created($"/generos/{id}", genero);
 
 });
+
+app.MapPut("/generos/{id:int}", async (int id, Genero genero, IRepositoryGeneros repository,
+    IOutputCacheStore outputCacheStore) =>
+    {
+        var existe = await repository.Existe(id);
+        if (!existe)
+        {
+            return Results.NotFound();
+        }
+
+        await repository.Actualizar(genero);
+        await outputCacheStore.EvictByTagAsync("generos-get", default);
+        return Results.NoContent();
+    });
+
+app.MapDelete("/generos/{id:int}", async (int id, IRepositoryGeneros repository,
+    IOutputCacheStore outputCacheStore) => 
+    {
+        var existe = await repository.Existe(id);
+        if (!existe)
+        {
+            return Results.NotFound();
+        }
+        await repository.Borrar(id);
+        await outputCacheStore.EvictByTagAsync("generos-get", default);
+        return Results.NoContent();
+    });
 
 // fin area middlware
 app.Run();

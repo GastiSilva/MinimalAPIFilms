@@ -12,12 +12,21 @@ namespace MinimalAPIFilms.Repository
         {
             this.context = context;
         }
-        
+
         public async Task<int> Crear(Genero genero)
         {
             context.Add(genero);
             await context.SaveChangesAsync();
             return genero.Id;
+        }
+        public  async Task Actualizar(Genero genero)
+        {
+            context.Update(genero);
+            await context.SaveChangesAsync();
+        }
+        public async Task<bool> Existe(int id)
+        {
+            return await context.Generos.AnyAsync(x => x.Id == id);
         }
 
         public async Task<Genero?> ObtenerPorId(int id)
@@ -29,6 +38,11 @@ namespace MinimalAPIFilms.Repository
         {
             return await context.Generos.OrderBy(x => x.Name).ToListAsync();
 
+        }
+
+        public async Task Borrar(int id)
+        {
+            await context.Generos.Where(x => x.Id == id).ExecuteDeleteAsync();
         }
     }
 }
