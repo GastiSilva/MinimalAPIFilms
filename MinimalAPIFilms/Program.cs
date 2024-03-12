@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 using MinimalAPIFilms;
@@ -47,25 +48,15 @@ app.UseOutputCache();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapGet("/generos", async (IRepositoryGeneros Repository) =>
-{
-    return await Repository.ObtenerTodos();
-}).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(60)).Tag("generos-get"));
+var endpointGeneros = app.MapGroup("/generos");
+
+endpointGeneros.MapGet("/", ObtenerGeneros).CacheOutput(c => c.Expire(TimeSpan.FromSeconds(60)).Tag("generos-get"));
 
 // {id:int} indicar paramentro de url
-app.MapGet("/generos/{id:int}", async (IRepositoryGeneros Repository, int id) =>
-{
-    var genero = await Repository.ObtenerPorId(id);
-    if (genero is null)
-    {
-        return Results.NotFound();
-    }
-
-    return Results.Ok(genero);
-});
+endpointGeneros.MapGet("/{id:int}", ObtenerGenerosId);
 //creo endpoint POST para crear genero
 
-app.MapPost("/generos", async (Genero genero, IRepositoryGeneros Repository,
+endpointGeneros.MapPost("/", async (Genero genero, IRepositoryGeneros Repository,
     IOutputCacheStore outputCacheStore) =>
 {
     var id = await Repository.Crear(genero);
@@ -74,7 +65,7 @@ app.MapPost("/generos", async (Genero genero, IRepositoryGeneros Repository,
 
 });
 
-app.MapPut("/generos/{id:int}", async (int id, Genero genero, IRepositoryGeneros repository,
+endpointGeneros.MapPut("/{id:int}", async (int id, Genero genero, IRepositoryGeneros repository,
     IOutputCacheStore outputCacheStore) =>
     {
         var existe = await repository.Existe(id);
@@ -88,7 +79,7 @@ app.MapPut("/generos/{id:int}", async (int id, Genero genero, IRepositoryGeneros
         return Results.NoContent();
     });
 
-app.MapDelete("/generos/{id:int}", async (int id, IRepositoryGeneros repository,
+endpointGeneros.MapDelete("/{id:int}", async (int id, IRepositoryGeneros repository,
     IOutputCacheStore outputCacheStore) => 
     {
         var existe = await repository.Existe(id);
@@ -104,3 +95,20 @@ app.MapDelete("/generos/{id:int}", async (int id, IRepositoryGeneros repository,
 // fin area middlware
 app.Run();
 
+//el typedResults es para que en swager se ve la estructura
+static async Task<Ok<List<Genero>>> ObtenerGeneros (IRepositoryGeneros Repository)
+{
+    var generos =  await Repository.ObtenerTodos();
+    return TypedResults.Ok(generos);
+}
+
+static async Task<Results<Ok<Genero>, NotFound>> ObtenerGenerosId  (IRepositoryGeneros Repository, int id)
+{
+    var genero = await Repository.ObtenerPorId(id);
+    if (genero is null)
+    {
+        return TypedResults.NotFound();
+    }
+
+    return TypedResults.Ok(genero);
+}
