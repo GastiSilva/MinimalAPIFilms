@@ -2,6 +2,6 @@
 {
     public class CrearGeneroDTO
     {
-        public string Nombre { get; set; } = null!;
+        public string Name { get; set; } = null!;
     }
 }

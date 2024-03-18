@@ -34,6 +34,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IRepositoryGeneros, RepositoryGeneros>();
+
+builder.Services.AddAutoMapper(typeof(Program));
 //fin area de serrvicios
 var app = builder.Build();
 

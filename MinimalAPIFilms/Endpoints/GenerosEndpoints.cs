@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.OutputCaching;
 using MinimalAPIFilms.DTOs;
 using MinimalAPIFilms.Entidades;
@@ -20,49 +21,49 @@ namespace MinimalAPIFilms.Endpoints
             return group;
         }
 
-        static async Task<Ok<List<Genero>>> ObtenerGeneros(IRepositoryGeneros Repository)
+        static async Task<Ok<List<GeneroDTO>>> ObtenerGeneros(IRepositoryGeneros Repository, IMapper mapper)
         {
             var generos = await Repository.ObtenerTodos();
-            return TypedResults.Ok(generos);
+            var generosDTO = mapper.Map<List<GeneroDTO>>(generos);
+            return TypedResults.Ok(generosDTO);
         }
 
-        static async Task<Results<Ok<Genero>, NotFound>> ObtenerGenerosId(IRepositoryGeneros Repository, int id)
+        static async Task<Results<Ok<GeneroDTO>, NotFound>> ObtenerGenerosId(IRepositoryGeneros Repository,
+            int id, IMapper mapper)
         {
             var genero = await Repository.ObtenerPorId(id);
             if (genero is null)
             {
                 return TypedResults.NotFound();
             }
-
-            return TypedResults.Ok(genero);
+            var generoDTO = mapper.Map<GeneroDTO>(genero);   
+            return TypedResults.Ok(generoDTO);
         }
 
-        static async Task<Created<GeneroDTO>> CrearGeneros(CrearGeneroDTO crearGeneroDTO, IRepositoryGeneros Repository, IOutputCacheStore outputCacheStore)
+
+        static async Task<Created<GeneroDTO>> CrearGeneros(CrearGeneroDTO crearGeneroDTO, 
+            IRepositoryGeneros Repository,
+            IOutputCacheStore outputCacheStore, IMapper mapper)
         {
-            var genero = new Genero
-            {
-                Name = crearGeneroDTO.Nombre
-            };
+            var genero = mapper.Map<Genero>(crearGeneroDTO);
             var id = await Repository.Crear(genero);
             await outputCacheStore.EvictByTagAsync("generos-get", default);
-
-            var generoDTO = new GeneroDTO
-            {
-                Id = id,
-                Name = crearGeneroDTO.Nombre
-            };
+            var generoDTO = mapper.Map<GeneroDTO>(genero);
             return TypedResults.Created($"/generos/{id}", generoDTO);
         }
 
-        static async Task<Results<NoContent, NotFound>> ActualizarGenero(int id, Genero genero, IRepositoryGeneros repository,
-            IOutputCacheStore outputCacheStore)
+        static async Task<Results<NoContent, NotFound>> ActualizarGenero(int id, CrearGeneroDTO crearGeneroDTO,
+            IRepositoryGeneros repository,
+            IOutputCacheStore outputCacheStore, IMapper mapper)
         {
             var existe = await repository.Existe(id);
             if (!existe)
             {
                 return TypedResults.NotFound();
             }
-
+            var genero = mapper.Map<Genero>(crearGeneroDTO);
+            genero.Id = id;
+           
             await repository.Actualizar(genero);
             await outputCacheStore.EvictByTagAsync("generos-get", default);
             return TypedResults.NoContent();
