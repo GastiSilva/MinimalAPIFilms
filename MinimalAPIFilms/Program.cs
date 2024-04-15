@@ -50,9 +50,8 @@ app.UseSwaggerUI();
 app.UseCors();
 app.UseOutputCache();
 
-app.MapGet("/", () => "Hello World!");
-
 app.MapGroup("/generos").MapGeneros();
+app.MapGroup("/actores").MapActores();
 
 
 // fin area middlware
